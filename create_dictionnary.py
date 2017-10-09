@@ -35,6 +35,8 @@ while True:
         {"$limit": 10000}
     ]))
 
+    print("Loaded from mongodb")
+
     if len(documentList) == 0:
         print("Nothing to do here")
         exit()
@@ -59,7 +61,6 @@ while True:
             # When the document has no body, we pass the exception in order to add the title to the dictionnary
             pass
         finally:
-            # DO nothing
             dict_title.add_documents([title_sentences])
             mongoColl.update_one({"_id": doc_id}, {"$set": {'used_in_dict': True}})
     mongoConnection.closeMongo(mongoCo)

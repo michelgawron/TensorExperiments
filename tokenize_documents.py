@@ -30,7 +30,6 @@ tigerDocs = tigerdb.news_aggregator
 documentList = list(tigerDocs.aggregate([
     {"$match": {"body_words": {"$exists": False}}},
     {"$match": {"text_body": {"$exists": True}}},
-    {"$sort": {"id": 1}},
     {"$limit": 50000}
 ],
     allowDiskUse=True))

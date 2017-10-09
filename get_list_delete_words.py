@@ -2,19 +2,17 @@
 ### Thus we will be able to use it in word2vec or doc2vec ##
 import mongoConnection
 
+list_of_words = []
+
 i = 0
 
 while True:
     print("\n##### Processing batch number " + str(i) + " #####\n")
     mongoCo = mongoConnection.connectToMongo(ignore_unicode_error=True)
     mongoDb = mongoCo.tensor_exp
-    mongoColl = mongoDb.news_aggregator
+    mongoColl = mongoDb.title_word_count
 
-    documentList = list(mongoColl.aggregate([
-        {"$match": {"body_lemm_words": {"$exists": True}}},
-        {"$match": {"body_sentences_from_words": {"$exists": False}}},
-        {"$limit": 10000}
-    ]))
+    documentList = list(mongoColl.find({"count": {"$lt": 5}}))
 
     if len(documentList) == 0:
         print("Nothing to do here")
