@@ -11,8 +11,8 @@ while True:
     mongoColl = mongoDb.news_aggregator
 
     documentList = list(mongoColl.aggregate([
-        {"$match": {"body_lemm_words": {"$exists": True}}},
-        {"$match": {"body_sentences_from_words": {"$exists": False}}},
+        {"$match": {"title_normalized": {"$exists": True}}},
+        {"$match": {"title_sentences_from_words": {"$exists": False}}},
         {"$limit": 10000}
     ]))
 
@@ -30,9 +30,9 @@ while True:
             print("Processing document n°" + str(index) + "/" + str(list_len))
         doc_id = doc["_id"]
 
-        words_list = doc["body_lemm_words"]
+        words_list = doc["title_normalized"]
         words_to_sentence = ' '.join(words_list)
 
-        mongoColl.update_one({"_id": doc_id}, {"$set": {'body_sentences_from_words': words_to_sentence}})
+        mongoColl.update_one({"_id": doc_id}, {"$set": {'title_sentences_from_words': words_to_sentence}})
     i += 1
     mongoConnection.closeMongo(mongoCo)
