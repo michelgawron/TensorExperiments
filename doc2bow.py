@@ -1,23 +1,13 @@
-### Creating a dictionnary with pre-processed texts ###
-### The dictionnary is basically a map from words to integers ###
-### This algorithm should run on lists of words and not plain sentences ###
-
+"""
+This program retrieves pre-processed text from our database, and converts it into bag of words representation
+"""
 
 import mongoConnection
 from pathlib import Path
 import gensim
 
-# Checking if a dictionnary already exists or not
 my_file_title = Path("dict/title/clean_title.dict")
 my_file_body = Path("dict/body/clean_body.dict")
-
-# If dictionnaries do not exist, we are going to create and save them on the disk
-if not (my_file_body.exists()):
-    print("Do not exist")
-    gensim.corpora.Dictionary().save(str(my_file_body))
-if not (my_file_title.exists()):
-    print("Do not exist")
-    gensim.corpora.Dictionary().save(str(my_file_title))
 
 i = 0
 
@@ -30,13 +20,15 @@ while True:
 
     i += 1
     print("\n##### Processing batch number " + str(i) + " #####\n")
+
+    # Getting database and collection - ignore_unicode_error set to True because of bad encoding due to scraping
     mongoCo = mongoConnection.connectToMongo(ignore_unicode_error=True)
     mongoDb = mongoCo.tensor_exp
     mongoColl = mongoDb.news_aggregator
 
     # Loading documents from the database
     documentList = list(mongoColl.aggregate([
-        {"$match": {"used_in_dict_clean": {"$exists": False}}},
+        {"$match": {"title_doc2bow": {"$exists": False}}},
         {"$match": {"clean_title": {"$exists": True}}},
         {"$limit": 10000}
     ]))
@@ -57,24 +49,20 @@ while True:
     for index, doc in enumerate(documentList, start=1):
         if index % process_length == 0:
             print("Processing document n°" + str(index) + "/" + str(list_len))
-            print(dict_title)
-            print(dict_body)
         doc_id = doc["_id"]
 
-        # Getting title sentences
-        title_sentences = doc["clean_title"]
+        # Getting title and body (if it exists) from a document, and converting them to bag of words representation
         try:
-            # Trying to get body sentences (if the field exists in the database) and adding it
-            body_sentences = doc["clean_body"]
-            dict_body.add_documents([body_sentences])
-        except KeyError:
-            # When the document has no body, we pass the exception in order to add the title to the dictionnary
+            doc_body = list(doc["clean_body"])
+            body_bow = dict_body.doc2bow(doc_body)
+            mongoColl.update_one({"_id": doc_id}, {"$set": {'body_doc2bow': body_bow}})
+        except:
             pass
         finally:
-            dict_title.add_documents([title_sentences])
-            # Updating mongodb
-            mongoColl.update_one({"_id": doc_id}, {"$set": {'used_in_dict_clean': True}})
+            doc_title = list(doc["clean_title"])
+            title_bow = dict_title.doc2bow(doc_title)
+            mongoColl.update_one({"_id": doc_id}, {"$set": {'title_doc2bow': title_bow}})
+
+
+    i += 1
     mongoConnection.closeMongo(mongoCo)
-    # Saving dictionnaries
-    dict_title.save(str(my_file_title))
-    dict_body.save(str(my_file_body))

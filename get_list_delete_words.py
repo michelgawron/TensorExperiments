@@ -14,13 +14,12 @@ def createDictionnary(folder, empty_dict):
         # Going through the list of words and keeping those which appear at least 5 times in the corpus
         for tuples in list_of_words:
             if tuples[1] > 5.0:
-                empty_dict.append(tuples)
+                empty_dict[tuples[0]] = "keep"
         fp.close()
         return empty_dict
 
-
-my_dict_title = createDictionnary("title", [])
-my_dict_body = createDictionnary("body", [])
+my_dict_title = createDictionnary("title", {})
+my_dict_body = createDictionnary("body", {})
 
 # Batch counter
 i = 0
@@ -35,7 +34,7 @@ while True:
     documentList = list(mongoColl.aggregate([
         {"$match": {"clean_title": {"$exists": False}}},
         {"$match": {"title_normalized": {"$exists": True}}},
-        {"$limit": 100}
+        {"$limit": 10000}
     ]))
 
     # Exit statement
@@ -61,15 +60,30 @@ while True:
 
         # Try to process body field
         try:
+            # Getting list of words for the body
             words_body_list = doc["body_normalized"]
-            clean_words_body = [word in my_dict_body for word in words_body_list]
+            clean_words_body = []
+
+            # For each word, checking if it is in the dict and appending the list if it is
+            for single_word in words_body_list:
+                if single_word in my_dict_body:
+                    clean_words_body.append(single_word)
+
+            # Updating mongodb
             mongoColl.update_one({"_id": doc_id}, {"$set": {'clean_body': clean_words_body}})
         except:
             # Pass if we cannot find it
             pass
         finally:
-            # One liner to filter words in the title
-            clean_words = [word in my_dict_title for word in words_list]
+            clean_words = []
+
+            # Going through the list of words, checking if it is in the dictionnary and appending if it is
+            for single_word in words_list:
+                if single_word in my_dict_title:
+                    clean_words.append(single_word)
+
+            # Updating mongodb
             mongoColl.update_one({"_id": doc_id}, {"$set": {'clean_title': clean_words}})
+
     i += 1
     mongoConnection.closeMongo(mongoCo)
