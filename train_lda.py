@@ -9,12 +9,12 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 
 
 
-for i in [4, 8, 16, 32, 64, 128, 256]:
+for i in [256]:
     print("Loading tfidf corpus")
     # Loading tfidf corpus from disk
     tfidf_corpus = gensim.corpora.MmCorpus('tfidf/corpus_tfidf.mm')
 
-    print("Creating LDA model for {} features".format(i))
+    print("\n\n\n############ Creating LSI model for {} features ############\n\n\n".format(i))
     # Creating a LSI model fitting this corpus
     lda = gensim.models.LdaModel(corpus=tfidf_corpus, num_topics=i, passes=20)
 
@@ -30,3 +30,4 @@ for i in [4, 8, 16, 32, 64, 128, 256]:
         doc_vec = pd.DataFrame(doc_vec)
         doc_vec.insert(0, 'label', list_labels)
         doc_vec.to_csv('csv_vectors/docvec_lda_{}.csv'.format(i), index=False)
+        fp.close()
