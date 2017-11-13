@@ -1,6 +1,7 @@
 import numpy as np
 from sklearn.decomposition import IncrementalPCA
 from array import array
+
 X = np.array([[-1, -1, 5, 3], [-2, -1, 4, 2], [-3, -2, 3, 1], [1, 1, 6, 4], [2, 1, 3, 1], [3, 2, 0, 8]])
 Z = np.array([1, 4, 3, 5, 1, 6, 3, -1, 12, 1, 3, 7, 3, 9])
 test = np.zeros(14)

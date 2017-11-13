@@ -5,9 +5,8 @@ import mongoConnection
 # Batch counter
 i = 0
 
-list_titles = []
-
 while True:
+    list_bodies = []
     i += 1
     print("\n##### Processing batch number " + str(i) + " #####\n")
     mongoCo = mongoConnection.connectToMongo(ignore_unicode_error=True)
@@ -16,10 +15,11 @@ while True:
 
     # Loading documents from the database
     documentList = list(mongoColl.aggregate([
-        {"$match": {"clean_title": {"$exists": True}}},
-        {"$match": {"clean_title_in_list": {"$exists": False}}},
+        {"$match": {"clean_body": {"$exists": True}}},
+        {"$match": {"clean_body_in_list": {"$exists": False}}},
         {"$limit": 10000}
-    ]))
+    ],
+        allowDiskUse=True))
 
     # Exit statement
     if len(documentList) == 0:
@@ -40,11 +40,11 @@ while True:
 
         # Getting fields that we need to process
         doc_id = doc["_id"]
-        words_list = doc["clean_title"]
-        list_titles.append(words_list)
-        mongoColl.update_one({"_id": doc_id}, {"$set": {'clean_title_in_list': True}})
-
+        words_list = doc["clean_body"]
+        list_bodies.append(words_list)
+        mongoColl.update_one({"_id": doc_id}, {"$set": {'clean_body_in_list': True}})
+    del(documentList)
     mongoConnection.closeMongo(mongoCo)
 
-with open("lists/title/list_tokenized_docs.txt", "wb") as fp:
-    pickle.dump(list_titles, fp)
+    with open("lists/body/tokenized_split/list_tokenized_docs{}.txt".format(i), "wb") as fp:
+        pickle.dump(list_bodies, fp)

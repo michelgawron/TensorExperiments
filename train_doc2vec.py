@@ -21,13 +21,13 @@ with open("lists/title/list_tagged_documents.txt", "rb") as tagged_docs:
     print(labeled_sentences[0])
     print("Len : {}".format(len(labeled_sentences)))
 
-    for i in [10, 20, 30, 50, 100, 200, 300, 400]:
+    for i in [100, 200, 300]:
         # Creating model, and feeding it with vocabulary
-        model = Doc2Vec(size=i, window=10, workers=20)
+        model = Doc2Vec(size=i, window=100, workers=20)
         model.build_vocab(labeled_sentences)
 
         # Training the model with 25 steps
         for epoch in range(25):
             labeled_sentences = shuffle(labeled_sentences)
             model.train(labeled_sentences, total_examples=model.corpus_count, epochs=model.iter)
-            model.save("doc2vec/model_{}.d2v".format(i))
+            model.save("doc2vec/model_window100_{}.d2v".format(i))
